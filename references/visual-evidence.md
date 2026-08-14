@@ -31,6 +31,12 @@ Record custom viewports with their user-supplied label and exact `width x
 height`. Do not add Tablet or another breakpoint without explicit scope
 confirmation through the runtime's structured user-input tool.
 
+Also record whether responsive testing was explicitly authorized. When it was
+declined, rows at different viewports are independent visual observations and
+must not be aggregated into responsive PASS/FAIL claims. When it was
+authorized, require at least two exact viewport sizes and record the
+cross-viewport behavior in the verification evidence.
+
 Save artifacts beneath:
 
 ```text

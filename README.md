@@ -57,7 +57,10 @@ reviews, accessibility observations, adversarial UI states, smoke checks, and
 end-to-end UI flows. When the request does not already specify viewport sizes,
 the skill asks whether to review PC, Mobile, both, or custom dimensions through
 Claude Code's `AskUserQuestion` or Codex's `RequestUserInput` before browser
-coverage begins. It never assumes a full multi-device matrix.
+coverage begins. It separately confirms whether responsive testing is required;
+declining it keeps multiple viewport checks independent and prevents a
+responsive verdict. The skill never assumes responsive authorization or a full
+multi-device matrix.
 
 Run artifacts are written beneath the reviewed project's `.vdr-log/`
 directory. The skill ensures the project's root `.gitignore` contains the
