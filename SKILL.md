@@ -212,30 +212,46 @@ Workers may not add routes, actions, or data mutations, but they must report
 every credible visual anomaly visible in their assigned rows. Do not give them
 an expected defect list; it anchors observation to known issues.
 
-For parallel work, assign only independent rows and steps. Give each worker
-stable step IDs, a unique group ID and artifact directory, a tool-call budget,
-and the output contracts below.
+Partition planned rows and steps by dependency. Whenever two or more test
+groups can run independently, always dispatch them to separate sub-agents and
+start them concurrently after the isolation gate passes. Do not execute ready
+independent groups in the coordinator or serialize them merely for convenience.
+A group is not independent when it has an ordering dependency, shares mutable
+browser or application state, or can collide on test data or artifacts.
+
+Give each sub-agent stable step IDs, a unique group ID and artifact directory,
+a tool-call budget, and the output contracts below. The coordinator owns scope,
+the isolation gate, aggregation, and coverage-gap detection; sub-agents own the
+assigned browser execution and evidence collection.
 
 ## Gate Parallel Execution
 
-Use `playwright-headless` and exactly two concurrent workers for the smoke gate:
+Use `playwright-headless` and exactly two concurrent sub-agents for the smoke
+gate:
 
 1. Assign distinct group IDs, artifact directories, screenshot paths, nonce
    values, and viewports (`375x812` and `1440x900`). Use the shared reserved
    key `visual-driven-review:isolation`.
-2. Both workers navigate to the same safe origin, write their nonce, and resize
-   to their assigned viewport through their own selected-server tools.
+2. Both sub-agents navigate to the same safe origin, write their nonce, and
+   resize to their assigned viewport through their own selected-server tools.
 3. After both mutations complete, both re-read the reserved key and viewport.
 4. Both capture unique screenshots and prove the artifacts exist at only their
    assigned paths.
 5. Record results, remove the reserved key, and verify cleanup. Cleanup is
    teardown, not isolation evidence.
 
-Parallel execution is allowed only when both workers retain distinct nonce
+Parallel execution is allowed only when both sub-agents retain distinct nonce
 values and viewport sizes and produce distinct artifacts. Use unique backend
 test data because browser isolation does not isolate application databases. If
-state or artifacts cross workers, stop parallel work and report the failure;
+state or artifacts cross sub-agents, stop parallel work and report the failure;
 never describe sequential fallback as parallel coverage.
+
+After the gate passes, dispatch every currently ready independent group in the
+same turn, up to the runtime's concurrency limit. When a batch finishes,
+dispatch the next ready independent groups without converting them to serial
+coordinator work. If sub-agents are unavailable, preserve the plan and report
+parallel execution as blocked; require user acceptance before any sequential
+fallback.
 
 ## Visual Discovery Pass
 
