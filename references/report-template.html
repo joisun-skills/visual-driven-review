@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visual-Driven Review Report</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f3f5f8;
+      --surface: #ffffff;
+      --text: #172033;
+      --muted: #566176;
+      --border: #d8dee9;
+      --accent: #2457d6;
+      --critical: #861b2b;
+      --high: #b43b16;
+      --medium: #8a5a00;
+      --low: #315d75;
+      --pass: #176c45;
+      --fail: #a22632;
+      --skip: #5d6370;
+      --visual-finding: #8a3d10;
+      --visual-clear: #176c45;
+      --visual-skip: #6a6275;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--background);
+      font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a { color: var(--accent); }
+
+    :focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .page-header {
+      padding: 2.5rem max(1.25rem, calc((100vw - 72rem) / 2));
+      color: #ffffff;
+      background: #172033;
+    }
+
+    .eyebrow, .meta { margin: 0; color: #c6d2eb; }
+    .page-header h1 { max-width: 24ch; margin: 0.35rem 0 0.75rem; line-height: 1.15; }
+
+    main {
+      width: min(72rem, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2rem 0 4rem;
+    }
+
+    section {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      background: var(--surface);
+      box-shadow: 0 0.5rem 1.5rem rgba(23, 32, 51, 0.06);
+    }
+
+    section h2 { margin-top: 0; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .summary-card {
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      background: var(--surface);
+    }
+
+    .summary-card span { display: block; color: var(--muted); }
+    .summary-card strong { display: block; margin-top: 0.25rem; font-size: 2rem; }
+    .summary-card.pass { border-top: 0.35rem solid var(--pass); }
+    .summary-card.fail { border-top: 0.35rem solid var(--fail); }
+    .summary-card.skip { border-top: 0.35rem solid var(--skip); }
+    .summary-card.visual-finding { border-top: 0.35rem solid var(--visual-finding); }
+    .summary-card.visual-clear { border-top: 0.35rem solid var(--visual-clear); }
+    .summary-card.visual-skip { border-top: 0.35rem solid var(--visual-skip); }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.94rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { background: #edf1f7; }
+
+    details {
+      margin-top: 0.75rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+    }
+
+    summary { cursor: pointer; font-weight: 700; }
+
+    .severity {
+      display: inline-block;
+      padding: 0.16rem 0.5rem;
+      border-radius: 999px;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 750;
+    }
+
+    .severity-critical { background: var(--critical); }
+    .severity-high { background: var(--high); }
+    .severity-medium { background: var(--medium); }
+    .severity-low { background: var(--low); }
+
+    .screenshot, figure img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+    }
+
+    @media (max-width: 44rem) {
+      .summary-grid { grid-template-columns: 1fr; }
+      .page-header { padding: 2rem 1rem; }
+      main { width: min(100% - 1rem, 72rem); padding-top: 0.5rem; }
+      section { padding: 1rem; }
+      th, td { padding: 0.55rem; }
+    }
+
+    @media print {
+      :root { --background: #ffffff; }
+      body { font-size: 11pt; }
+      .page-header { padding: 1rem 0; color: #000000; background: #ffffff; }
+      .eyebrow, .meta { color: #333333; }
+      main { width: 100%; padding: 0; }
+      section, .summary-card, details { break-inside: avoid; box-shadow: none; }
+      a { color: #000000; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Aggregation replaces the exact tokens below. It must HTML-escape every non-aggregator-owned scalar: REPORT_TITLE, TARGET_REVISION, GENERATED_AT, PASS_COUNT, FAIL_COUNT, SKIP_COUNT, VISUAL_FINDING_COUNT, VISUAL_CLEAR_COUNT, and VISUAL_SKIP_COUNT, plus every user/application-derived field used to compose RUN_METADATA_HTML, ISOLATION_HTML, COVERAGE_HTML, VISUAL_REVIEW_HTML, FINDINGS_HTML, CONSOLE_NETWORK_HTML, and GAPS_HTML. Only fixed aggregator-owned wrapper markup is a trusted fragment; arbitrary test content is never trusted HTML. RUN_METADATA_HTML must identify the selected MCP server, environment, authorized target, and viewport/state scope. COVERAGE_HTML and VISUAL_REVIEW_HTML must provide complete semantic table fragments with scoped headers. Copy screenshots locally or data-embed them, and safely encode screenshot attribute URLs and alt text, so the report remains portable. -->
+  <header class="page-header">
+    <p class="eyebrow">Visual-Driven Review Report</p>
+    <h1>{{REPORT_TITLE}}</h1>
+    <p class="meta">Target revision: {{TARGET_REVISION}} · Generated: {{GENERATED_AT}}</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="summary-heading">
+      <h2 id="summary-heading">Summary</h2>
+      <div class="summary-grid">
+        <article class="summary-card pass" aria-label="Passed steps">
+          <span>Pass</span>
+          <strong>{{PASS_COUNT}}</strong>
+        </article>
+        <article class="summary-card fail" aria-label="Failed steps">
+          <span>Fail</span>
+          <strong>{{FAIL_COUNT}}</strong>
+        </article>
+        <article class="summary-card skip" aria-label="Skipped steps">
+          <span>Skip</span>
+          <strong>{{SKIP_COUNT}}</strong>
+        </article>
+        <article class="summary-card visual-finding" aria-label="Visual findings">
+          <span>Visual findings</span>
+          <strong>{{VISUAL_FINDING_COUNT}}</strong>
+        </article>
+        <article class="summary-card visual-clear" aria-label="Visually reviewed clean states">
+          <span>Visual clear</span>
+          <strong>{{VISUAL_CLEAR_COUNT}}</strong>
+        </article>
+        <article class="summary-card visual-skip" aria-label="Skipped visual reviews">
+          <span>Visual skip</span>
+          <strong>{{VISUAL_SKIP_COUNT}}</strong>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="run-metadata-heading">
+      <h2 id="run-metadata-heading">Run Metadata</h2>
+      {{RUN_METADATA_HTML}}
+    </section>
+
+    <section aria-labelledby="isolation-heading">
+      <h2 id="isolation-heading">Isolation</h2>
+      {{ISOLATION_HTML}}
+    </section>
+
+    <section aria-labelledby="coverage-heading">
+      <h2 id="coverage-heading">Coverage</h2>
+      {{COVERAGE_HTML}}
+    </section>
+
+    <section aria-labelledby="visual-review-heading">
+      <h2 id="visual-review-heading">Visual Review</h2>
+      {{VISUAL_REVIEW_HTML}}
+    </section>
+
+    <section aria-labelledby="findings-heading">
+      <h2 id="findings-heading">Findings</h2>
+      {{FINDINGS_HTML}}
+    </section>
+
+    <section aria-labelledby="console-network-heading">
+      <h2 id="console-network-heading">Console and Network</h2>
+      {{CONSOLE_NETWORK_HTML}}
+    </section>
+
+    <section aria-labelledby="gaps-heading">
+      <h2 id="gaps-heading">Coverage Gaps</h2>
+      {{GAPS_HTML}}
+    </section>
+  </main>
+</body>
+</html>
