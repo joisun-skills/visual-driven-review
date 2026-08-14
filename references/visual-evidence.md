@@ -18,13 +18,18 @@ matrix tracks observation independently from planned `STEP_*` checks.
 image was viewed at original captured resolution, the region sweep was recorded,
 and suspicious details were reinspected in a focused image when necessary.
 
-Use the project's supplied viewport matrix when one exists. Otherwise use:
+Use only the viewport matrix explicitly confirmed during `Scope the Run`.
+Project-defined dimensions may be offered during confirmation but do not
+authorize full-matrix coverage. Standard suggestions are:
 
 | Viewport | Size |
 | --- | --- |
-| Desktop | `1440x900` |
-| Tablet | `768x1024` |
+| PC | `1440x900` |
 | Mobile | `375x812` |
+
+Record custom viewports with their user-supplied label and exact `width x
+height`. Do not add Tablet or another breakpoint without explicit scope
+confirmation through the runtime's structured user-input tool.
 
 Save artifacts beneath:
 

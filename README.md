@@ -54,7 +54,10 @@ git submodule update --init --recursive
 Ask the Agent to audit, inspect, validate, or explore a web UI in a real
 browser. The workflow covers broad visual audits, responsive and regression
 reviews, accessibility observations, adversarial UI states, smoke checks, and
-end-to-end UI flows.
+end-to-end UI flows. When the request does not already specify viewport sizes,
+the skill asks whether to review PC, Mobile, both, or custom dimensions through
+Claude Code's `AskUserQuestion` or Codex's `RequestUserInput` before browser
+coverage begins. It never assumes a full multi-device matrix.
 
 Run artifacts are written beneath the reviewed project's `.vdr-log/`
 directory. The skill ensures the project's root `.gitignore` contains the

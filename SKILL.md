@@ -128,9 +128,34 @@ Route a failed precheck by cause:
 ## Scope the Run
 
 Record target revision, base URL, authorized routes, material UI states, safe
-actions, data boundaries, authentication, and supplied design references. Use
-the project's viewport matrix, falling back to the matrix below only when none
-exists. Note whether the run is diff-driven or exploratory.
+actions, data boundaries, authentication, and supplied design references. Note
+whether the run is diff-driven or exploratory.
+
+Resolve viewport scope before building the coverage matrix or making the first
+browser call:
+
+1. If the user already supplied exact viewport labels or dimensions, use only
+   those viewports and do not ask again.
+2. Otherwise inspect the project's viewport matrix, when present, to obtain
+   suggested dimensions; it is a source of options, not authorization to test
+   every entry.
+3. Use the runtime's structured user-input tool: `AskUserQuestion` in Claude
+   Code or `RequestUserInput` (`request_user_input`) in Codex. Ask which
+   viewport coverage to run and offer `PC only`, `Mobile only`, and
+   `Mobile + PC`; keep the tool's free-form `Other` path available for exact
+   custom dimensions such as `1280x720` or multiple comma-separated sizes.
+4. Use project-defined PC/Mobile dimensions when available. Otherwise suggest
+   `1440x900` for PC and `375x812` for Mobile. If an `Other` response does not
+   contain exact `width x height` values, collect them with the same structured
+   input tool before continuing.
+5. Record the confirmed labels and exact dimensions as the authorized viewport
+   matrix. Do not silently add Tablet or any other breakpoint. If later
+   evidence makes another size useful, request explicit scope expansion with
+   the same tool before capturing it.
+
+If neither structured input tool nor an explicit user-supplied viewport is
+available, stop before browser execution and report viewport selection as a
+missing prerequisite. Never fall back to a full multi-viewport matrix.
 
 Separate two contracts:
 
@@ -264,13 +289,16 @@ record a skip and the evidence gap.
 
 ## Cover the Viewport Matrix
 
-Use the project's matrix first. Otherwise use exactly:
+Cover exactly the user-confirmed viewport matrix from `Scope the Run`. The
+standard suggestions are:
 
 | Viewport | Size |
 | --- | --- |
-| Desktop | `1440x900` |
-| Tablet | `768x1024` |
+| PC | `1440x900` |
 | Mobile | `375x812` |
+
+Project-defined or user-supplied exact dimensions override these suggestions.
+Tablet and other breakpoints are included only when the user selects them.
 
 Before each viewport row, resize and verify retained dimensions. Save and
 inspect a baseline viewport screenshot for every tested route and viewport.
