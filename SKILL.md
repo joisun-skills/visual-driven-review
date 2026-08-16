@@ -13,6 +13,20 @@ authorized page must be reported even when they were not named in the plan.
 
 Test and report the UI; do not implement code fixes as part of this workflow.
 
+## Reviewer Mindset
+
+Default to assuming the page under test contains undiscovered defects. A clean
+first impression is not a conclusion — it means the required systematic sweep
+has not been completed yet, not that the page is clean. Emitting `VISUAL_CLEAR`
+requires having actively hunted per the mandatory checks below, not merely
+having glanced at the viewport without noticing anything obviously wrong.
+
+Many real defects — orphan spacer elements, mismatched control-cluster spacing,
+content wider than its container — do not visually "jump out" in a whole-page
+screenshot. They only surface when specifically measured. Do not rely on
+spontaneous suspicion alone to trigger the checks in "Mandatory Micro-Level
+Checks" below; run them unconditionally for every material state.
+
 ## Non-Negotiable Boundaries
 
 - Select one configured Playwright MCP server before the run and use only that
@@ -56,11 +70,13 @@ Test and report the UI; do not implement code fixes as part of this workflow.
   only recipes needed by the assigned steps and visual suspicions.
 - Read `references/visual-observation.md` and
   `references/visual-evidence.md` for every run before opening the target.
+- Read `references/ux-heuristics.md` for every run before opening the target,
+  alongside `visual-observation.md` and `visual-evidence.md`. Its core
+  heuristics apply by default; a request scoped narrowly to a single functional
+  check does not exempt Visual Discovery coverage from them.
 - Read `references/adversarial-testing.md` whenever scope contains user input,
   mutable state, destructive actions, asynchronous behavior, or state
   transitions.
-- Read `references/ux-heuristics.md` when the request includes an audit or
-  exploratory UX scope.
 - Read `references/report-template.html` only while aggregating final results.
 
 ## Blocking Precheck and Server Lock
@@ -200,6 +216,15 @@ such as an unchanged render or an out-of-scope transient pointer position, and
 record that reason in the planned step evidence. Do not use “non-material” to
 avoid reviewing a visible result.
 
+When an authorized route contains an easily reachable boundary or error path
+that was not named in the plan — an empty filter result, a validation error
+from obviously invalid input, a zero/negative/very-long value in a visible
+field — trigger it once within the authorized scope and treat the resulting
+render as a material state requiring Visual Discovery coverage, even though it
+was not pre-declared. This is required evidence collection, not scope
+expansion: it stays within already-authorized routes and safe actions. Do not
+wait for the plan to schedule a state that is trivially reachable within scope.
+
 ## Plan Without Planning Away Discovery
 
 Create stable IDs for planned checks. Give each planned check one route, initial
@@ -276,15 +301,20 @@ before planned assertions can bias the verdict:
 5. Inspect relationships, not only elements: collisions, clipping, unintended
    occlusion, broken alignment or grouping, overflow, truncation/wrapping,
    icon–text and baseline anomalies, hierarchy loss, state ambiguity, and
-   inconsistent repeated patterns.
+   inconsistent repeated patterns. In addition, run the unconditional checks in
+   "Mandatory Micro-Level Checks" below for every control cluster present in
+   this state — do not treat them as optional or dependent on having already
+   noticed something suspicious here.
 6. Give every suspicion a focused visual recheck. When the selected MCP supports
    element or region screenshots, save and inspect that focused artifact before
    emitting a finding. If it does not, zoom or crop the original artifact with
    the runtime image viewer and record the capability gap. If neither recheck is
    possible, emit `VISUAL_SKIP`. Then run the smallest bounded DOM/layout or
    computed-style check that can confirm or refute the visual hypothesis.
-   Measurement follows observation; a globally healthy DOM does not cancel a
-   visible defect.
+   For suspicion-driven checks, measurement follows observation. The Mandatory
+   Micro-Level Checks are the explicit exception: run their measurements
+   unconditionally even without prior suspicion. A globally healthy DOM does
+   not cancel a visible defect.
 7. Reinspect the focused image and evidence. Emit one `VISUAL_FINDING` per
    credible issue. Emit `VISUAL_CLEAR` only when all required regions were
    actually reviewed and no credible issue remains. If capture or review cannot
@@ -295,6 +325,40 @@ Use `references/visual-observation.md` for the observation threshold and
 does not require a design image. When the only question is product taste,
 branding, or an unknown design rule, record the missing reference as an
 evidence gap instead of inventing a finding.
+
+## Mandatory Micro-Level Checks
+
+Run these checks for every control cluster (a filter bar, a button group, a
+table header row, a repeated card/list-item template) in every material state,
+regardless of whether anything looked suspicious in the whole-page screenshot.
+These defects are frequently invisible at whole-page scale and are missed by
+suspicion-triggered recheck alone:
+
+1. **Spacing consistency.** For adjacent same-type controls (inputs, buttons,
+   dropdowns, header cells), compare the gaps between each pair. Flag any gap
+   that is visibly inconsistent with its neighbors, and any thin element sitting
+   between controls that carries no visible label or content — this is often a
+   leftover spacer/divider element rather than an intentional design choice.
+2. **Content-vs-container width.** For every text-bearing cell, label, or
+   header, compare the text's natural width against its rendered container
+   width. Flag any case where this mismatch causes character-by-character
+   wrapping, vertical/single-column text stacking, or unexpected truncation —
+   this is a distinct, common failure mode from generic "overflow" and must be
+   checked explicitly, not assumed to be caught by broader alignment checks.
+3. **Structural residue.** Explicitly look for elements that occupy visible
+   width or height but carry no content, label, or apparent function — empty
+   table columns, unlabeled narrow cells, leftover divider bars. Name this
+   category explicitly in findings (do not fold it into generic "broken
+   alignment") since it usually indicates leftover markup (an uncleaned div,
+   a width not reset to zero, a placeholder column) rather than a rendering
+   glitch.
+4. **Icon/button edge spacing.** For icon-only buttons and controls near a
+   container edge, check whether padding to the edge is consistent with
+   padding used elsewhere in the same cluster.
+
+Save a focused screenshot of the cluster (cropped or element-targeted) as
+evidence for any finding from this section, per the focused-recheck
+requirement in the main Visual Discovery Pass.
 
 ## Execute Planned Checks After Looking
 
@@ -427,6 +491,10 @@ Before delivery, verify:
   resolution, with focused reinspection for suspicious details;
 - every required region is recorded as reviewed, `not present`, or skipped with
   a reason;
+- every qualifying control cluster in every material state has a recorded
+  micro-sweep result covering spacing, content-vs-container width, structural
+  residue, and icon/button edge spacing; a missing cluster record blocks
+  `VISUAL_CLEAR`;
 - every FAIL/finding has exact route, state, viewport, reproduction, observable
   impact, screenshot, and deterministic evidence when measurable;
 - no missing evidence, omitted region, or sequential fallback is disguised as

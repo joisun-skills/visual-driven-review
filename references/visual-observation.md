@@ -19,14 +19,16 @@ For every material route, state, and viewport:
 4. Sweep every required region and record it as reviewed or `not present`.
    On a scrollable page, use a full-page overview plus overlapping viewport
    segments; an unreached below-the-fold region is `SKIP`, not `not present`.
-5. Turn each credible suspicion into one focused visual hypothesis.
-6. Perform a focused visual recheck for every suspicion. When MCP supports an
+5. Run the Mandatory Control-Cluster Micro Sweep below for every qualifying
+   cluster, even when the overview produced no suspicion.
+6. Turn each other credible suspicion into one focused visual hypothesis.
+7. Perform a focused visual recheck for every suspicion. When MCP supports an
    element or region screenshot, save and inspect it; every emitted finding must
    reference that artifact. Otherwise zoom/crop the original with the runtime
    image viewer, record the capability gap, then collect the smallest relevant
    DOM/layout or computed-style evidence. If no focused recheck is possible,
    the row is `SKIP`.
-7. Confirm, downgrade to an evidence gap, or reject the hypothesis. Do not keep
+8. Confirm, downgrade to an evidence gap, or reject the hypothesis. Do not keep
    a visual claim merely because it was expected.
 
 This order matters. DOM-first inspection anchors attention to known elements and
@@ -47,6 +49,24 @@ unexpected defect.
 The examples are lenses, not a defect checklist. Scan the rendered image for
 other obvious broken relationships. Never conclude “clear” after checking only
 the element named by the planned functional step.
+
+## Mandatory Control-Cluster Micro Sweep
+
+Run this sweep for every filter bar, button group, table header row, and
+repeated card/list-item template. It is mandatory even when the full-page image
+looks clean:
+
+| Check | Required action |
+| --- | --- |
+| Spacing consistency | Compare adjacent child-control bounding boxes and the gap between every pair; recheck any outlier and any thin in-between element with no visible content. |
+| Content-vs-container width | Compare each text-bearing cell, label, or header's inner content-box width with its natural unwrapped text width; inspect line boxes and wrapping styles for character-by-character or vertical/single-column stacking. |
+| Structural residue | Find elements with non-zero visible dimensions but no text, accessible label, interactive role, or apparent function; name empty columns, unlabeled narrow cells, and leftover spacer/divider markup as `structural residue`. |
+| Icon/button edge spacing | Compare icon-only buttons, checkboxes, and other edge-adjacent controls with their container edge and peer padding inside the same cluster. |
+
+Record each cluster as micro-sweep reviewed even when it is clean. A finding
+requires the same focused screenshot and bounded DOM/layout evidence as any
+other visual finding; the measurement is unconditional, while the verdict
+still depends on observed impact and evidence.
 
 ## Intrinsic Defect vs Reference-Dependent Judgment
 

@@ -1,8 +1,8 @@
 # Observable UX Heuristics
 
-Use these lenses only for routes and user tasks inside the agreed audit scope.
+Use these lenses only for routes and user tasks inside the agreed review scope.
 Ask observable questions, collect evidence, and report bounded findings. Do not
-redesign the product during an audit.
+redesign the product during a review.
 
 ## Review Lenses
 
@@ -36,6 +36,25 @@ redesign the product during an audit.
 - Where an existing product pattern is the approved reference, does the audited
   state expose the same role, name, placement, and outcome?
 - Is any exception explained by an observable task difference?
+
+### Control-Cluster Integrity and Structural Residue
+
+- In every filter bar, button group, table header, and repeated item template,
+  are the gaps between adjacent same-type controls consistent when their
+  bounding boxes are compared?
+- Does any element occupy visible width or height while carrying no text,
+  accessible label, interactive role, or apparent function? Report empty
+  columns, unlabeled narrow cells, and leftover spacer/divider elements as
+  **structural residue**, not generic broken alignment.
+- For each text-bearing cell, label, and header, does its natural unwrapped text
+  width fit the rendered content box? Check explicitly for character-by-
+  character wrapping, vertical/single-column stacking, and unexpected
+  truncation.
+- For icon-only buttons, checkboxes, and edge-adjacent controls, is the distance
+  to the container edge consistent with padding elsewhere in the same cluster?
+
+Run this lens for every material state even when the whole-page screenshot did
+not first produce a suspicion.
 
 ### Error Prevention and Actionable Copy
 
