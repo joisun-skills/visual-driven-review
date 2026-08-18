@@ -25,7 +25,7 @@ current browser's login state, cookies, or installed extensions.
 Clone the repository into your Agent Skills directory:
 
 ```bash
-git clone https://github.com/joisun/visual-driven-review.git \
+git clone https://github.com/joisun-skills/visual-driven-review.git \
   ~/.agents/skills/visual-driven-review
 ```
 
@@ -33,7 +33,7 @@ Or add it to a Git-managed skills collection as a submodule:
 
 ```bash
 git submodule add \
-  https://github.com/joisun/visual-driven-review.git \
+  https://github.com/joisun-skills/visual-driven-review.git \
   path/to/skills/visual-driven-review
 ```
 
